@@ -1,6 +1,6 @@
 ﻿// Offline support: always try the network first (so updates show up right away),
 // and fall back to the last cached copy when there is no connection.
-const CACHE = 'study-app-20261101163911';
+const CACHE = 'study-app-20261101180922';
 
 self.addEventListener('install', () => self.skipWaiting());
 

@@ -80,6 +80,19 @@
       });
     })();
   </script>
+  <script>
+    // The old address still works; point students to the new short link.
+    if (location.hostname.endsWith('github.io')) {
+      var b = document.createElement('div');
+      b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;display:flex;gap:10px;align-items:center;' +
+        'justify-content:center;padding:8px 12px;background:#4F63D9;color:#fff;font:14px system-ui,"Segoe UI",Tahoma,sans-serif;direction:rtl';
+      b.innerHTML = '<span>zakerGPT اتنقل لينك جديد 🎉</span>' +
+        '<a href="https://zakergpt.pages.dev/" style="color:#fff;font-weight:700">zakergpt.pages.dev</a>' +
+        '<button aria-label="اقفل" style="background:none;border:0;color:#fff;font-size:18px;cursor:pointer">×</button>';
+      b.querySelector('button').onclick = function () { b.remove(); };
+      document.body.appendChild(b);
+    }
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

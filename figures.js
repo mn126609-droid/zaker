@@ -27,6 +27,60 @@
     o.getContext('2d').drawImage(c, l, t, r - l, b - t, 0, 0, r - l, b - t);
     return o;
   }
+  let recorder = null, chunks = [], stream = null, player = null;
+  window.zakerRecStart = async function () {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      chunks = [];
+      recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = function (e) { if (e.data.size) chunks.push(e.data); };
+      recorder.start();
+      return true;
+    } catch (e) { return false; }
+  };
+  window.zakerRecStop = function () {
+    return new Promise(function (done) {
+      if (!recorder) return done(null);
+      recorder.onstop = async function () {
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        const type = (recorder.mimeType || 'audio/webm').split(';')[0];
+        const b = new Uint8Array(await new Blob(chunks, { type: type }).arrayBuffer());
+        let bin = '';
+        for (let i = 0; i < b.length; i += 8192) bin += String.fromCharCode.apply(null, b.subarray(i, i + 8192));
+        recorder = null;
+        done(type + '|' + btoa(bin));
+      };
+      recorder.stop();
+    });
+  };
+  window.zakerPlay = function (b64, mime) {
+    if (player) { player.pause(); player = null; return; }
+    player = new Audio('data:' + mime + ';base64,' + b64);
+    player.onended = function () { player = null; };
+    player.play();
+  };
+  window.zakerPages = async function (bytes, mime) {
+    if (mime !== 'application/pdf') return 1;
+    return (await pdf(bytes)).numPages;
+  };
+  // An AI drawing as a PNG, drawn by the browser so Arabic and every symbol show, on any phone.
+  window.zakerSvg = async function (svg) {
+    try {
+      const fonts = "Cairo, 'Segoe UI', Tahoma, Roboto, 'Noto Sans Arabic', Arial, sans-serif";
+      let s = svg.replace(/font-family\s*=\s*"[^"]*"/g, 'font-family="' + fonts + '"').replace(/font-family\s*:[^;"']*/g, 'font-family:' + fonts);
+      const vb = /viewBox\s*=\s*"\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)/.exec(s);
+      const w = vb ? +vb[1] : 360, h = vb ? +vb[2] : 220;
+      s = s.replace(/<svg\b/, '<svg width="' + w + '" height="' + h + '" font-family="' + fonts + '"');
+      const img = new Image();
+      await new Promise(function (ok, no) { img.onload = ok; img.onerror = no; img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s); });
+      const k = Math.min(3, 1400 / w), c = document.createElement('canvas');
+      c.width = Math.ceil(w * k); c.height = Math.ceil(h * k);
+      const g = c.getContext('2d');
+      g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+      g.drawImage(img, 0, 0, c.width, c.height);
+      return c.toDataURL('image/png').split(',')[1];
+    } catch (e) { return null; }
+  };
   window.zakerFigure = async function (bytes, mime, page) {
     try {
       const c = document.createElement('canvas'), g = c.getContext('2d', { willReadFrequently: true });

@@ -1,6 +1,6 @@
 ﻿// Offline support: always try the network first (so updates show up right away),
 // and fall back to the last cached copy when there is no connection.
-const CACHE = 'study-app-20261110201637';
+const CACHE = 'study-app-20261111205942';
 
 self.addEventListener('install', () => self.skipWaiting());
 
@@ -15,6 +15,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
+  // Google sign-in pages pass through untouched, never from the offline copy.
+  if (new URL(req.url).pathname.includes('/__/')) return;
   event.respondWith(
     fetch(req)
       .then((res) => {
